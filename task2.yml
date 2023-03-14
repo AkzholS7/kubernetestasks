@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: safari-pv
+  namespace: project-tiger-akzhols
+spec:
+  storageClassName: ""
+  capacity: 
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /home/Volumes/Data
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-tiger-akzhols
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: 
+  name: safari-pvc
+  namespace: project-tiger-akzhols
+spec:
+  storageClassName: "" 
+  accessModes: 
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  volumeName: safari-pv
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: safari
+  namespace: project-tiger-akzhols
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: httpd
+          image: httpd:2.4.41-alpine
+          ports:
+          - containerPort: 80
+            name: "http-server"
+          volumeMounts:
+            - mountPath: "/tmp/safari-data"
+              name: safari-pv
+      volumes:
+        - name: safari-pv
+          persistentVolumeClaim:
+            claimName: safari-pvc
+         
